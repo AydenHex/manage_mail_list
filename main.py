@@ -5,6 +5,8 @@ import re
 import urllib
 from bs4 import BeautifulSoup
 
+
+
 def getDomain(myMail):
     return re.split(r'@', myMail)[1]
 
@@ -12,10 +14,10 @@ def pingDomain(myDomain):
     response = os.system("ping -c 1 " + myDomain)
     return True if response == 0 else False
 
-print(pingDomain("itescia.fr"))
+print(pingDomain("google.fr"))
 
 def testDomain(myDomain):
-    codeResult = str(urllib.urlopen(myDomain).getcode())
+    codeResult = str(urllib.request.urlopen("http://" + myDomain).getcode())
     return(codeResult)
 
 
