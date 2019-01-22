@@ -1,31 +1,46 @@
 import tkinter as tk
 from tkinter import font
 import tkinter.ttk as ttk
-import os, csv
+from tkinter import filedialog, simpledialog
+import csv
+from bs4 import BeautifulSoup
+import requests, re
+from email_validator import validate_email, EmailNotValidError
+import writeMail
+
 
 class manageMail(tk.Tk):
+    '''
+    Classe associé à l'interface de gestion des mailinglist
+    '''
 
-    def __init__(self, thismailist):
+    def __init__(self, thismailist, parent):
         super().__init__()
         self.fontTitle = font.Font(family='Helvetica', size=28)
         self.fontCommun = font.Font(family='Helvetica', size=15)
 
+        self._parent = parent
         self._listmail = thismailist
 
-        self.geometry("500x800")
+        self.geometry("500x600")
 
-        self.deleteDoubleButton = tk.Button(self, text="Dédoublouner", font=self.fontCommun)
-        self.deleteDoubleButton.place(x=45,y=50)
+        self.dedupeButton = tk.Button(self, text="Dédoublouner", font=self.fontCommun, command=lambda: self.dedupe())
+        self.dedupeButton.place(x=45, y=50)
 
-        self.AvailableButton = tk.Button(self, text="Test de la Mailist", font=self.fontCommun)
-        self.AvailableButton.place(x=280,y=50)
+        self.AvailableButton = tk.Button(self, text="Test de la Mailist", font=self.fontCommun, command=lambda: self.validityMail())
+        self.AvailableButton.place(x=280, y=50)
 
-        self.CSVButton = tk.Button(self, text="CSV", font=self.fontCommun, command= lambda: self.loadCSV("test.csv"))
+        self.CSVButton = tk.Button(self, text="CSV", font=self.fontCommun, command=lambda: self.loadCsv())
         self.CSVButton.place(x=85, y=110)
 
-        self.LinkButton = tk.Button(self, text="URL", font=self.fontCommun)
+        self.LinkButton = tk.Button(self, text="URL", font=self.fontCommun, command=lambda: self.crawlMail())
         self.LinkButton.place(x=330, y=110)
 
+        self.nextButton = tk.Button(self, text="Suite", font=self.fontCommun, command=lambda: self.next())
+        self.nextButton.place(x=400, y=500)
+
+        self.backButton = tk.Button(self, text="Retour", font=self.fontCommun, command=lambda: self.back())
+        self.backButton.place(x=40, y=500)
 
         self.tv = ttk.Treeview(self)
         self.tv['columns'] = ('validity')
@@ -35,32 +50,77 @@ class manageMail(tk.Tk):
         self.tv.column('validity', anchor='center', width=100)
 
         self.vsb = ttk.Scrollbar(self, orient="vertical", command=self.tv.yview)
-        self.vsb.place(x=50+400+2, y=200, height=200+20)
+        self.vsb.place(x=50 + 400 + 2, y=200, height=200 + 20)
 
         self.tv.configure(yscrollcommand=self.vsb.set)
 
-        self.tv.place(x=50,y=200)
+        self.tv.place(x=50, y=200)
 
-    def loadMail(self):
+        # Je charge en mémoire les mails si le fichier est existant
+        self.reloadMail()
+
+    def reloadMail(self):
+        self.tv.delete(*self.tv.get_children())
         for mail in self._listmail:
             self.tv.insert("", 'end', text=mail, values=('~'))
-    
-    def loadCSV(self, myFile):
-        
-        if os.path.isfile(myFile):
-            listResult = list()
-            with open(myFile, 'r') as myCsv:
-                spamreader = csv.reader(myCsv, delimiter=',', quotechar='|')
-                for row in spamreader:
-                    self._listmail.append(row)
-                    self.tv.insert("", 'end', text=row, value=('~'))
-        print("ok")
-            
-    
+
+    def loadCsv(self):
+        csv_filechooser = tk.filedialog.askopenfile(title='Choisir le csv', filetypes=[("CSV files","*.csv")])
+        myFile = csv_filechooser.name
+        with open(myFile, 'r') as myCsv:
+            spamreader = csv.reader(myCsv, delimiter=',', quotechar='|')
+            for row in spamreader:
+                mail = re.sub(r"[]'[]", "", row[0])
+                self._listmail.append(mail)
+        self.reloadMail()
+
+    def crawlMail(self):
+        myUrl = tk.simpledialog.askstring(title="Choisisez une url", prompt="Adresse url à crawler", parent=self)
+        plainPage = requests.get(myUrl).text
+        beautifulPage = str(BeautifulSoup(plainPage, "html.parser"))
+        result = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', beautifulPage)
+        self._listmail.extend(result)
+        self.reloadMail()
+
+    def dedupe(self):
+        newlistmail = list()
+        for mail in self._listmail:
+            if mail not in newlistmail:
+                newlistmail.append(mail)
+        self._listmail = newlistmail
+        self.reloadMail()
+
+    def validityMail(self):
+        key = self.tv.get_children()
+        for item in key:
+            current_item = self.tv.item(item)
+            current_mail = current_item['text']
+            self.tv.item(item, values=['OK'])
+            try:
+                result = validate_email(current_mail)
+                self.tv.item(item, values=['OK'])
+            except EmailNotValidError as e:
+                print(e)
+                self.tv.item(item, values=['ERROR'])
+
+    def saveMail(self):
+        myFile = self._parent.campaign.get() + '.csv'
+        with open(myFile, 'w+') as myCsv:
+            spamwriter = csv.writer(myCsv, delimiter=' ', quotechar='|')
+            for item in self._listmail:
+                if type(item) is list:
+                    spamwriter.writerow(item)
+                else:
+                    spamwriter.writerow([item])
+    def next(self):
+        self.saveMail()
+        self.withdraw()
+        myWriteMail = writeMail.writeMail(self._listmail, self)
+        myWriteMail.mainloop()
+
+    def back(self):
+        self.saveMail()
+        self._parent.deiconify()
+        self.destroy()
 
 
-        
-
-mm = manageMail(["royerquentin.pro@outlook.com", "ted@ted.fr"])
-mm.after(2, mm.loadMail())
-mm.mainloop()

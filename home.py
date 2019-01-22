@@ -1,6 +1,9 @@
 import tkinter as tk
+import csv
+import os
 from tkinter import font
-from Mail import mailist
+import manage_mail
+import re
 
 
 class homePage(tk.Tk):
@@ -16,14 +19,33 @@ class homePage(tk.Tk):
 
         self.labelTitre = tk.Label(self, text="Nom de la compagne", font=self.fontTitle)
         self.inputName = tk.Entry(self, textvariable=self.campaign, justify="center", width=40, font=self.fontName)
-        self.buttonLaunch = tk.Button(self, text="Commencer !", font=self.fontName)
+        self.buttonLaunch = tk.Button(self, text="Commencer !", font=self.fontName, command=lambda: self.launchMailingList())
 
         self.labelTitre.place(x=70, y=150)
         self.inputName.place(x=25, y=220)
         self.buttonLaunch.place(x=180, y=300)
 
-    def loadMail(self, maillist):
-        for mail in mailismaillist:
+    def launchMailingList(self):
+        listResult = list()
+        myFile = self.campaign.get() + '.csv'
+        if os.path.isfile(myFile):
+            with open(myFile, 'r') as myCsv:
+                spamreader = csv.reader(myCsv, delimiter=',', quotechar='|')
+                for row in spamreader:
+                    mail = re.sub(r"[]'[]", "", row[0])
+                    listResult.append(mail)
+        else:
+            os.mknod(myFile)
+
+        self.withdraw()
+        my_manage_mail = manage_mail.manageMail(listResult, self)
+        my_manage_mail.mainloop()
+
+
+
+
+
+
             
 
 hp = homePage()
