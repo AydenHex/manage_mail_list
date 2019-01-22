@@ -32,7 +32,7 @@ class homePage(tk.Tk):
             with open(myFile, 'r') as myCsv:
                 spamreader = csv.reader(myCsv, delimiter=',', quotechar='|')
                 for row in spamreader:
-                    mail = re.sub(r"[]'[]", "", row[0])
+                    mail = row
                     listResult.append(mail)
         else:
             os.mknod(myFile)

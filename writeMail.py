@@ -31,12 +31,6 @@ class writeMail(tk.Tk):
 
         self.geometry("600x700")
 
-        self.sender = tk.Label(self, text="Expéditeur :", font=self.fontCommun, justify='center')
-        self.sender.place(x=100, y=50)
-
-        self.senderInput = tk.Entry(self, textvariable=self._mail['sender'], font=self.fontCommun)
-        self.senderInput.place(x=300, y=40)
-
         self.object = tk.Label(self, text="Objet :", font=self.fontCommun, justify='center')
         self.object.place(x=100, y=100)
 

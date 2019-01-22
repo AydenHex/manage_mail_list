@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import font
-import mail1
 import tkinter.ttk as ttk
 from tkinter import filedialog, simpledialog
 import csv

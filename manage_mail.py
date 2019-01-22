@@ -105,7 +105,7 @@ class manageMail(tk.Tk):
 
     def saveMail(self):
         myFile = self._parent.campaign.get() + '.csv'
-        with open(myFile, 'w+') as myCsv:
+        with open(myFile, 'w+', newline='') as myCsv:
             spamwriter = csv.writer(myCsv, delimiter=' ', quotechar='|')
             for item in self._listmail:
                 if type(item) is list:
