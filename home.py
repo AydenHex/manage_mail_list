@@ -1,9 +1,9 @@
-import tkinter as tk
-import csv
 import os
+import re
+import csv
+import tkinter as tk
 from tkinter import font
 import manage_mail
-import re
 
 
 class homePage(tk.Tk):

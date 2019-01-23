@@ -1,18 +1,21 @@
+import csv
+import requests
+import re
+
 import tkinter as tk
 from tkinter import font
 import tkinter.ttk as ttk
-from tkinter import filedialog, simpledialog
-import csv
+from tkinter import filedialog
+from tkinter import simpledialog
+
 from bs4 import BeautifulSoup
-import requests, re
-from email_validator import validate_email, EmailNotValidError
+from email_validator import validate_email
+from email_validator import EmailNotValidError
+
 import writeMail
 
 
 class manageMail(tk.Tk):
-    '''
-    Classe associé à l'interface de gestion des mailinglist
-    '''
 
     def __init__(self, thismailist, parent):
         super().__init__()
@@ -35,6 +38,9 @@ class manageMail(tk.Tk):
 
         self.LinkButton = tk.Button(self, text="URL", font=self.fontCommun, command=lambda: self.crawlMail())
         self.LinkButton.place(x=330, y=110)
+
+        self.deleteButton = tk.Button(self, text="Delete not valide mail", font=self.fontCommun, command=lambda: self.deleteNotValide())
+        self.deleteButton.place(x=330, y=110)
 
         self.nextButton = tk.Button(self, text="Suite", font=self.fontCommun, command=lambda: self.next())
         self.nextButton.place(x=400, y=500)
@@ -91,17 +97,20 @@ class manageMail(tk.Tk):
         self.reloadMail()
 
     def validityMail(self):
-        key = self.tv.get_children()
-        for item in key:
+        keys = self.tv.get_children()
+        invalidMailKey = []
+        for item in keys:
             current_item = self.tv.item(item)
             current_mail = current_item['text']
             self.tv.item(item, values=['OK'])
             try:
-                result = validate_email(current_mail)
                 self.tv.item(item, values=['OK'])
             except EmailNotValidError as e:
                 print(e)
+                invalidMailKey.append(item)
                 self.tv.item(item, values=['ERROR'])
+        if invalidMailKey:
+
 
     def saveMail(self):
         myFile = self._parent.campaign.get() + '.csv'

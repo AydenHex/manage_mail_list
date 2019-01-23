@@ -1,12 +1,7 @@
 import tkinter as tk
 from tkinter import font
+
 import sendMail
-import tkinter.ttk as ttk
-from tkinter import filedialog, simpledialog
-import csv
-from bs4 import BeautifulSoup
-import requests, re
-from email_validator import validate_email, EmailNotValidError
 
 
 class writeMail(tk.Tk):
