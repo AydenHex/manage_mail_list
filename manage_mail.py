@@ -7,6 +7,7 @@ from tkinter import font
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import simpledialog
+from tkinter.messagebox import askyesno
 
 from bs4 import BeautifulSoup
 from email_validator import validate_email
@@ -30,17 +31,14 @@ class manageMail(tk.Tk):
         self.dedupeButton = tk.Button(self, text="Dédoublouner", font=self.fontCommun, command=lambda: self.dedupe())
         self.dedupeButton.place(x=45, y=50)
 
-        self.AvailableButton = tk.Button(self, text="Test de la Mailist", font=self.fontCommun, command=lambda: self.validityMail())
-        self.AvailableButton.place(x=280, y=50)
+        self.availableButton = tk.Button(self, text="Test de la Mailist", font=self.fontCommun, command=lambda: self.validityMail())
+        self.availableButton.place(x=280, y=50)
 
-        self.CSVButton = tk.Button(self, text="CSV", font=self.fontCommun, command=lambda: self.loadCsv())
-        self.CSVButton.place(x=85, y=110)
+        self.csvButton = tk.Button(self, text="CSV", font=self.fontCommun, command=lambda: self.loadCsv())
+        self.csvButton.place(x=85, y=110)
 
         self.LinkButton = tk.Button(self, text="URL", font=self.fontCommun, command=lambda: self.crawlMail())
         self.LinkButton.place(x=330, y=110)
-
-        self.deleteButton = tk.Button(self, text="Delete not valide mail", font=self.fontCommun, command=lambda: self.deleteNotValide())
-        self.deleteButton.place(x=330, y=110)
 
         self.nextButton = tk.Button(self, text="Suite", font=self.fontCommun, command=lambda: self.next())
         self.nextButton.place(x=400, y=500)
@@ -100,21 +98,25 @@ class manageMail(tk.Tk):
         keys = self.tv.get_children()
         invalidMailKey = []
         for item in keys:
-            current_item = self.tv.item(item)
-            current_mail = current_item['text']
-            self.tv.item(item, values=['OK'])
+            current_mail = self.tv.item(item)['text']
             try:
+                validate_email(current_mail)
                 self.tv.item(item, values=['OK'])
             except EmailNotValidError as e:
-                print(e)
-                invalidMailKey.append(item)
                 self.tv.item(item, values=['ERROR'])
+                invalidMailKey.append(self.tv.item(item))
         if invalidMailKey:
+            userResponse = askyesno(title="Supprimer mail invalide", message="Voullez vous supprimez les mails invalides ?")
+            if userResponse:
+                self.tv.delete(invalidMailKey)
+
+
+
 
 
     def saveMail(self):
         myFile = self._parent.campaign.get() + '.csv'
-        with open(myFile, 'w+') as myCsv:
+        with open(myFile, 'w+', newline='') as myCsv:
             spamwriter = csv.writer(myCsv, delimiter=' ', quotechar='|')
             for item in self._listmail:
                 if type(item) is list:

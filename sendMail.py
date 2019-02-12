@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import font
-
-import mail1
-
+import smtplib
+from email.mime.text import MIMEText
 
 
 class sendMail(tk.Tk):
@@ -17,13 +16,14 @@ class sendMail(tk.Tk):
 
         self._mail = mail
 
+        self._testmail = tk.StringVar()
 
         self.geometry("600x350")
 
         self.mailTest = tk.Label(self, text="Mail d'essai : ", font=self.fontCommun, justify='center')
         self.mailTest.place(x=70, y=50)
 
-        self.mailTestInput = tk.Entry(self, font=self.fontCommun)
+        self.mailTestInput = tk.Entry(self, font=self.fontCommun, textvariable=self._testmail)
         self.mailTestInput.place(x=270, y=50)
 
         self.mailTestButton = tk.Button(self, text="Envoyer un mail", font=self.fontCommun, command=lambda: self.sendMailTest())
@@ -34,8 +34,23 @@ class sendMail(tk.Tk):
 
 
     def sendMailTest(self):
-        print(self._mail['mailinglist'])
-        pass
+        s = smtplib.SMTP('smtp.gmail.com')
+        s.set_debuglevel(1)
+        msg = MIMEText("""body""")
+        sender = 'quentin.mailtest2@gmail.com'
+        recipients = [self._testmail.get()]
+        msg['Subject'] = self._mail['object']
+        msg['From'] = sender
+        msg['To'] = ", ".join(recipients)
+        s.sendmail(sender, recipients, msg.as_string())
 
     def sendMail(self):
-        pass
+        s = smtplib.SMTP('smtp.gmail.com')
+        s.set_debuglevel(1)
+        msg = MIMEText("""body""")
+        sender = 'quentin.mailtest2@gmail.com'
+        recipients = [self._mail['mailinglist']]
+        msg['Subject'] = self._mail['object']
+        msg['From'] = sender
+        msg['To'] = ", ".join(recipients)
+        s.sendmail(sender, recipients, msg.as_string())
